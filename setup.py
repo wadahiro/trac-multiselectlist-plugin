@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-PACKAGE = 'MiltiSelectListPlugin'
+PACKAGE = 'MultiSelectListPlugin'
 VERSION = '0.0.1'
 
 setup(
@@ -13,6 +13,7 @@ setup(
     license='NewBSD', url='',
     zip_safe=True,
     packages = ['multiselectlist'],
+    package_data={'multiselectlist': ['htdocs/css/*.css', 'htdocs/js/*.js']},
     entry_points = {
         'trac.plugins': [
             'multiselectlist.multiselectlist = multiselectlist.multiselectlist',

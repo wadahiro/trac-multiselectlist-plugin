@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import pkg_resources
+
 from trac.core import *
 from genshi.filters.transform import Transformer
 from trac.web.api import ITemplateStreamFilter
 from genshi.builder import tag
 from trac.config import ListOption
 from trac.web.main import IRequestFilter
+from trac.web.chrome import add_script, add_stylesheet, ITemplateProvider
 
 class MultiSelectList(Component):
     u"""カスタムフィールドにおいて、複数選択を可能にするためのプラグイン
     """
-    implements(IRequestFilter,ITemplateStreamFilter)
+    implements(IRequestFilter,ITemplateStreamFilter,ITemplateProvider)
 
     multilist = ListOption('multiselectlist', 'fieldname',
         doc = u"""複数選択を可能にするカスタムフィールドの名称。
@@ -21,6 +24,13 @@ class MultiSelectList(Component):
         （例：hogefield.values = hoge,fuga,hogehoge,fugafuga
         """)
 
+    # ITemplateProvider methods
+    def get_htdocs_dirs(self):
+        return [('multiselectlist', pkg_resources.resource_filename(__name__, 'htdocs'))]
+
+    def get_templates_dirs(self):
+        return []
+
     # iniファイルの中で定義した値をキーとしてiniファイルに指定する場合、
     # ListOptionなどで記載することはできないんだろうか・・・。
     # （IniAdminの画面からだけでは処理できなくなってしまう）
@@ -29,6 +39,11 @@ class MultiSelectList(Component):
     # ITemplateStreamFilter methods
     def filter_stream(self, req, method, filename, stream, formdata):
         if (filename == 'ticket.html'):
+            add_stylesheet(req, 'multiselectlist/css/jquery-ui.css')
+            add_stylesheet(req, 'multiselectlist/css/jquery.multiselect.css')
+            add_script(req, 'multiselectlist/js/jquery-ui-1.8.16.custom.min.js')
+            add_script(req, 'multiselectlist/js/jquery.multiselect.min.js')
+
             for item in self.multilist:
                 values = self.env.config.get('multiselectlist', '%s.values' % item)
                 if values:
@@ -46,7 +61,7 @@ class MultiSelectList(Component):
                         sql = "select value from ticket_custom where ticket=%s and name='%s'" % (ticketno, item)
                         cursor.execute(sql)
                         row = cursor.fetchone()
-                        if row:
+                        if row and row[0]:
                             inputvalues = row[0].split(',')
 
                     self.env.log.info(inputvalues)
@@ -54,10 +69,20 @@ class MultiSelectList(Component):
                     xpath = '//input[@id="field-%s"]' % item
                     # input要素をselect/option要素に置き換える。
                     # タグの繰り返しを行う場合は、配列で指定すればいいようだ。
+
+                    script = """
+jQuery(function(){
+  jQuery("#field-%s").multiselect({
+    selectedList: 3
+  });
+});
+""" % item
+
                     stream |= Transformer(xpath).replace(
                         tag.select(
                             [tag.option(v, selected=(v in inputvalues or None)) for v in value],
-                            id='field-%s' % item, name='field_%s' % item, size='4', multiple='true'))
+                            id='field-%s' % item, name='field_%s' % item, size='%d' % len(value), multiple='true'))
+                    stream |= Transformer('//head').append(tag.script(script, type="text/javascript"))
         return stream
 
     # IRequestFilter
