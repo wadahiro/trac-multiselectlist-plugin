@@ -1,6 +1,8 @@
-Trac MiltiSelectListPlugin
+Trac MultiSelectListPlugin
 ========================
 https://github.com/wadahiro/trac-multiselectlist-plugin
+
+This plugin is based on [MultiSelectListPlugin](http://syo.cocolog-nifty.com/freely/trac_multiselectlistplugin.html).
 
 Installing
 -------------------
