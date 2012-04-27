@@ -13,7 +13,7 @@ setup(
     license='NewBSD', url='',
     zip_safe=True,
     packages = ['multiselectlist'],
-    package_data={'multiselectlist': ['htdocs/css/*.css', 'htdocs/js/*.js']},
+    package_data={'multiselectlist': ['htdocs/css/*.css','htdocs/css/images/*', 'htdocs/js/*.js']},
     entry_points = {
         'trac.plugins': [
             'multiselectlist.multiselectlist = multiselectlist.multiselectlist',
